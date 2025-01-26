@@ -21,7 +21,7 @@ func Load() *Config {
 	// Command line flags
 	flag.StringVar(&cfg.LeetCodeSession, "cookie", "", "LeetCode session cookie")
 	flag.BoolVar(&cfg.Headless, "headless", true, "Run in headless mode")
-	flag.DurationVar(&cfg.Delay, "delay", 2*time.Second, "Delay between actions")
+	flag.DurationVar(&cfg.Delay, "delay", 5*time.Second, "Delay between actions")
 	problems := flag.String("problems", "two-sum,add-two-numbers", "Comma-separated problem slugs")
 
 	flag.Parse()
