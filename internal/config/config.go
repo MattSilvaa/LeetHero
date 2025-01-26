@@ -31,7 +31,7 @@ func Load() *Config {
 	}
 
 	if cfg.LeetCodeSession == "" {
-		log.Fatal("LeetCode session cookie is required. Set via -cookie flag or LEETCODE_SESSION environment variable")
+		log.Fatal("LeetCode session cookie is required. Set via --cookie flag or LEETCODE_SESSION environment variable")
 	}
 
 	// Parse problems list
