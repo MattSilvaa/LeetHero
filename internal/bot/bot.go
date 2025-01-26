@@ -42,6 +42,7 @@ func New(cfg *config.Config) (*LeetHero, error) {
 func (h *LeetHero) setCookie(ctx context.Context) error {
 	fmt.Println("Setting LeetCode session cookie...")
 	return chromedp.Run(ctx,
+		chromedp.Navigate("https://leetcode.com"),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			expr := cdp.TimeSinceEpoch(time.Now().Add(14 * 24 * time.Hour))
 			cookie := []*network.CookieParam{
@@ -57,26 +58,33 @@ func (h *LeetHero) setCookie(ctx context.Context) error {
 			}
 			return network.SetCookies(cookie).Do(ctx)
 		}),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			var signInExists bool
+			if err := chromedp.Evaluate(`!!document.querySelector('#navbar_sign_in_button')`, &signInExists).Do(ctx); err != nil {
+				return err
+			}
+			if signInExists {
+				return fmt.Errorf("cookie authentication failed")
+			}
+			fmt.Println("Successfully authenticated")
+			return nil
+		}),
 	)
 }
 
 func (h *LeetHero) solveProblem(slug string) error {
 	fmt.Printf("Solving problem: %s\n", slug)
-	editorSelector := `.monaco-editor textarea.inputarea`
 	submitButton := `[data-e2e-locator="console-submit-button"]`
 
-	solutionCode := Solutions[slug]
-	var isPython3 bool
-
+	var currentLang string
 	return chromedp.Run(h.ctx,
 		chromedp.Navigate(fmt.Sprintf("https://leetcode.com/problems/%s/", slug)),
-		chromedp.WaitVisible(editorSelector),
-		chromedp.Evaluate(`
-    document.evaluate('//div[contains(text(), "Python3")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue !== null
-`, &isPython3),
+		chromedp.Sleep(h.config.Delay),
+
+		chromedp.Text(`button.group`, &currentLang),
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			if !isPython3 {
-				if err := chromedp.Click(`//button[contains(text(), 'C++')]`).Do(ctx); err != nil {
+			if currentLang != "Python3" {
+				if err := chromedp.Click(`button.group`).Do(ctx); err != nil {
 					return err
 				}
 				if err := chromedp.WaitVisible(`//div[contains(text(), "Python3")]`).Do(ctx); err != nil {
@@ -88,24 +96,22 @@ func (h *LeetHero) solveProblem(slug string) error {
 			}
 			return nil
 		}),
-		chromedp.WaitVisible(editorSelector),
-		chromedp.Focus(editorSelector),
 
-		chromedp.Evaluate(`
-           const editor = document.querySelector('.monaco-editor');
-           const textarea = editor.querySelector('textarea');
-           const model = editor.querySelector('.view-lines');
+		chromedp.Sleep(h.config.Delay),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			// Use JavaScript to completely replace the editor content
+			script := fmt.Sprintf(`
+                var editor = monaco.editor.getModels()[0];
+                editor.setValue(`+"`%s`"+`);
+            `, Solutions[slug])
 
-           // Clear input using multiple methods
-           textarea.value = '';
-           model.textContent = '';
-           textarea.dispatchEvent(new Event('input', { bubbles: true }));
-           textarea.dispatchEvent(new Event('change', { bubbles: true }));
-        `, nil),
+			return chromedp.Evaluate(script, nil).Do(ctx)
+		}),
 
-		chromedp.SendKeys(editorSelector, solutionCode),
-
+		chromedp.Sleep(h.config.Delay),
 		chromedp.WaitVisible(submitButton),
+		chromedp.Click(submitButton),
+		chromedp.Sleep(h.config.Delay),
 	)
 }
 
