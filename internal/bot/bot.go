@@ -3,13 +3,12 @@ package bot
 import (
 	"context"
 	"fmt"
+	"github.com/MattSilvaa/leethero/internal/config"
+	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/network"
 	"log"
 	"time"
 
-	"github.com/MattSilvaa/leethero/internal/config"
-
-	"github.com/chromedp/cdproto/cdp"
-	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/chromedp"
 )
 
@@ -42,7 +41,6 @@ func New(cfg *config.Config) (*LeetHero, error) {
 func (h *LeetHero) setCookie(ctx context.Context) error {
 	fmt.Println("Setting LeetCode session cookie...")
 	return chromedp.Run(ctx,
-		chromedp.Navigate("https://leetcode.com"),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			expr := cdp.TimeSinceEpoch(time.Now().Add(14 * 24 * time.Hour))
 			cookie := []*network.CookieParam{
@@ -58,6 +56,14 @@ func (h *LeetHero) setCookie(ctx context.Context) error {
 			}
 			return network.SetCookies(cookie).Do(ctx)
 		}),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			return network.SetExtraHTTPHeaders(map[string]interface{}{
+				"User-Agent":      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+				"Accept-Language": "en-US,en;q=0.9",
+				"Referer":         "https://leetcode.com/",
+			}).Do(ctx)
+		}),
+		chromedp.Navigate("https://leetcode.com"),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			var signInExists bool
 			if err := chromedp.Evaluate(`!!document.querySelector('#navbar_sign_in_button')`, &signInExists).Do(ctx); err != nil {
@@ -78,6 +84,13 @@ func (h *LeetHero) solveProblem(slug string) error {
 
 	var currentLang string
 	return chromedp.Run(h.ctx,
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			return network.SetExtraHTTPHeaders(map[string]interface{}{
+				"User-Agent":      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+				"Accept-Language": "en-US,en;q=0.9",
+				"Referer":         "https://leetcode.com/",
+			}).Do(ctx)
+		}),
 		chromedp.Navigate(fmt.Sprintf("https://leetcode.com/problems/%s/", slug)),
 		chromedp.Sleep(h.config.Delay),
 
