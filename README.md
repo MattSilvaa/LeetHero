@@ -3,7 +3,8 @@
 Ever dreamed of a pristine, all-green submission history? Tired of manually grinding through LeetCode problems? **LeetHero** is here to save your day!
 
 ## Features 🚀
-- Auto-login capabilities (like a true superhero's secret identity)
+- Cookie-based authentication
+  - IDK maybe I'll do auto-login eventually when I research how to actually bypass Cloudflare
 - Lightning-fast problem submissions
 - Pre-loaded solutions that actually work
 - Your ticket to algorithmic glory
@@ -16,20 +17,38 @@ go install
 ```
 
 ## Usage 💻
-1. Set your credentials:
+1. Get your LEETCODE_SESSION cookie from browser:
+    - Login to LeetCode
+    - Open DevTools (F12)
+    - Go to Application > Cookies
+    - Copy LEETCODE_SESSION value
+
+
+2. Run using environment variable:
 ```bash
-export LEETCODE_USERNAME="your_username"
-export LEETCODE_PASSWORD="your_password"
+export LEETCODE_SESSION="your_cookie_value"
+./leethero
 ```
 
-2. Run the hero:
+Or using command line flag:
+```bash
+./leethero -cookie="your_cookie_value"
+```
+
+Additional flags:
+```bash
+  -headless=false     # Show browser window
+  -delay=5s          # Set delay between actions
+  -problems="two-sum,add-two-numbers"  # Specify problems
+
+3. Run LeetHero:
 ```bash
 ./leethero
 ```
 
 Or with custom flags:
 ```bash
-./leethero --headless=true --delay=2s --problems="two-sum,add-two-numbers"
+./leethero --headless=true --problems="two-sum,add-two-numbers"
 ```
 
 ## Warning ⚠️
