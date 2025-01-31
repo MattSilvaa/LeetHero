@@ -58,9 +58,18 @@ func (h *LeetHero) setCookie(ctx context.Context) error {
 		}),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			return network.SetExtraHTTPHeaders(map[string]interface{}{
-				"User-Agent":      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-				"Accept-Language": "en-US,en;q=0.9",
-				"Referer":         "https://leetcode.com/",
+				"User-Agent":         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+				"Accept-Language":    "en-US,en;q=0.9",
+				"Origin":             "https://leetcode.com",
+				"Referer":            "https://leetcode.com/",
+				"DNT":                "1",
+				"sec-ch-ua":          `"Not A(Brand";v="8", "Chromium";v="132"`,
+				"sec-ch-ua-platform": "Linux",
+				"sec-ch-ua-arch":     "x86",
+				"sec-ch-ua-bitness":  "64",
+				"sec-fetch-dest":     "empty",
+				"sec-fetch-mode":     "cors",
+				"sec-fetch-site":     "same-origin",
 			}).Do(ctx)
 		}),
 		chromedp.Navigate("https://leetcode.com"),
@@ -85,15 +94,24 @@ func (h *LeetHero) solveProblem(slug string) error {
 	var currentLang string
 	return chromedp.Run(h.ctx,
 		chromedp.ActionFunc(func(ctx context.Context) error {
+			fmt.Println("Setting HTTP headers...")
 			return network.SetExtraHTTPHeaders(map[string]interface{}{
-				"User-Agent":      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-				"Accept-Language": "en-US,en;q=0.9",
-				"Referer":         "https://leetcode.com/",
+				"User-Agent":         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
+				"Accept-Language":    "en-US,en;q=0.9",
+				"Origin":             "https://leetcode.com",
+				"Referer":            "https://leetcode.com/",
+				"DNT":                "1",
+				"sec-ch-ua":          `"Not A(Brand";v="8", "Chromium";v="132"`,
+				"sec-ch-ua-platform": "Linux",
+				"sec-ch-ua-arch":     "x86",
+				"sec-ch-ua-bitness":  "64",
+				"sec-fetch-dest":     "empty",
+				"sec-fetch-mode":     "cors",
+				"sec-fetch-site":     "same-origin",
 			}).Do(ctx)
 		}),
 		chromedp.Navigate(fmt.Sprintf("https://leetcode.com/problems/%s/", slug)),
 		chromedp.Sleep(h.config.Delay),
-
 		chromedp.Text(`button.group`, &currentLang),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			if currentLang != "Python3" {
@@ -109,7 +127,6 @@ func (h *LeetHero) solveProblem(slug string) error {
 			}
 			return nil
 		}),
-
 		chromedp.Sleep(h.config.Delay),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			// Use JavaScript to completely replace the editor content
@@ -120,7 +137,6 @@ func (h *LeetHero) solveProblem(slug string) error {
 
 			return chromedp.Evaluate(script, nil).Do(ctx)
 		}),
-
 		chromedp.Sleep(h.config.Delay),
 		chromedp.WaitVisible(submitButton),
 		chromedp.Click(submitButton),
